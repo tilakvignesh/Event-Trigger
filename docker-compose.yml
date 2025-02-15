@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  # ✅ FastAPI App
+  web:
+    build: .
+    container_name: fastapi_app
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+      - celery_worker
+    env_file:
+      - .env
+
+  # ✅ PostgreSQL Database
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: eventdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # ✅ Redis (Used for Caching + Celery Broker)
+  redis:
+    image: redis:latest
+    container_name: redis_cache
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # ✅ Celery Worker (Executes Background Tasks)
+  celery_worker:
+    build: .
+    container_name: celery_worker
+    command: celery -A app.celery_worker worker --loglevel=info --pool=solo
+    depends_on:
+      - redis
+      - db
+    env_file:
+      - .env
+
+  # ✅ Flower (Celery Monitoring UI)
+  flower:
+    image: mher/flower
+    container_name: flower_monitor
+    command: flower --broker=redis://redis:6379
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+      - celery_worker
+
+volumes:
+  postgres_data:
