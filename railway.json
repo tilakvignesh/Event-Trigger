@@ -1,9 +1,0 @@
-{
-    "build": {
-      "dockerfile": "Dockerfile"
-    },
-    "deploy": {
-      "startCommand": "docker-compose up --build"
-    }
-  }
-  
