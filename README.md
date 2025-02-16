@@ -2,19 +2,28 @@
 ![Backend Architecture](images/Architecture.png)
 
 ## Deployed Solution Link
---- Add Link Here -----
+[Here](http://13.201.189.39:8000/)
 
 ## Local Setup 
 
 1. git clone https://github.com/tilakvignesh/Event-Trigger.git
-2. Ensure you have docker installed.
-3. run ``` docker-compose up --build -d ```
-4. Verify it's run properly with ``` docker ps -a ```
+
+2. Create a .env file in the root directory consisting of 
+``` 
+DATABASE_URL=postgresql://postgres:postgres@db/eventdb
+REDIS_URL=redis://redis:6379/0
+```
+
+3. Ensure you have docker installed.
+
+4. run ``` docker-compose up --build -d ```
+
+5. Verify it's run properly with ``` docker ps -a ```
 
 ![Docker ps -a output screenshot](images/docker.png)
 
-5. If everything seems fine, FastAPI should be running now at http://127.0.0.1:8000
-6. You can view and interact with the same at http://127.0.0.1:8000/docs
+6. If everything seems fine, FastAPI should be running now at http://127.0.0.1:8000
+7. You can view and interact with the same at http://127.0.0.1:8000/docs
 
 
 ## Endpoint Structures
@@ -100,6 +109,6 @@
 
 ## Credits: Resources that helped me complete this project:
 
-- Software Engineer, Colleague: chatGPT
+- Co-Software Engineer, Colleague: chatGPT
 - Mr Know it all: stackoverflow, medium
 - Emotional Support: One Piece
