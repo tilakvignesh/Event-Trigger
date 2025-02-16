@@ -16,44 +16,58 @@ celery.conf.update(
     }
 )
 
-# celery.conf.beat_schedule = {
-#     "cleanup-event-logs": {
-#         "task": "app.celery_worker.cleanup_event_logs",
-#         "schedule": crontab(minute="*/30"),  # Runs every 30 minutes
-#     },
-# }
-
-
 @celery.task
 def cleanup_event_logs():
-    db = SessionLocal()
-    now = datetime.utcnow()
+    """Cleanup event logs every 2 hours by moving logs older 
+    than 2 hours to "archived" status and deleting "archived" 
+    logs older than 48 hours."""
+    try:
+        print("Begin Cleanup")
+        db = SessionLocal()
+        now = datetime.utcnow()
 
-    # ✅ Move "active" logs older than 2 hours to "archived"
-    two_hours_ago = now - timedelta(hours=2)
-    ans = db.query(EventLog).filter(EventLog.status == "active", EventLog.executed_at < two_hours_ago).update(
-        {"status": "archived"}
-    )
+        # Move "active" logs older than 2 hours to "archived"
+        two_hours_ago = now - timedelta(hours=2)
+        db.query(EventLog).filter(EventLog.status == "active", EventLog.executed_at < two_hours_ago).update(
+            {"status": "archived"}
+        )
 
-    # ✅ Delete "archived" logs older than 48 hours
-    forty_eight_hours_ago = now - timedelta(hours = 48)
-    ans_2 = db.query(EventLog).filter(EventLog.status == "archived", EventLog.executed_at < forty_eight_hours_ago).delete()
-    db.commit()
-    db.close()
-    print("✅ Event log cleanup completed")
+        # Delete "archived" logs older than 48 hours
+        forty_eight_hours_ago = now - timedelta(hours = 48)
+        db.query(EventLog).filter(EventLog.status == "archived", EventLog.executed_at < forty_eight_hours_ago).delete()
+        db.commit()
+        db.close()
+        print("Event log cleanup completed")
+
+    except Exception as e:
+        print(f"Error during event log cleanup: {e}")
 
 
 @celery.task(name = "execute_scheduled_trigger")
 def execute_scheduled_trigger(trigger_id: str, recurring: bool = False, interval: int = 0, payload: dict = None):
-    print('IS THIS FUNCTION EVENT CALLED?')
-    print('HELLO!')
+    """
+    Execute a scheduled trigger task.
+
+    Args:
+        trigger_id (str): The ID of the trigger to be executed.
+        recurring (bool, optional): Indicates if the task is recurring. Defaults to False.
+        interval (int, optional): The time interval in seconds for recurring tasks. Defaults to 0.
+        payload (dict, optional): The payload associated with the trigger execution. Defaults to None.
+
+    The function logs an event in the database with the trigger's execution details and 
+    deletes the cached "active_logs" in Redis. If the trigger is recurring and the interval 
+    is greater than 0, it schedules the task to be executed again after the specified interval, 
+    updating the task_id in the database.
+
+    Raises:
+        Exception: If an error occurs during execution, it logs the error message.
+    """
+    print('Executing either scheduled or api trigger')
     redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True)
 
     try:
-        print('IN EXECUTE')
 
         db = SessionLocal()
-        print('HELLOOOOO')
         event = EventLog(
             id=uuid.uuid4(),
             trigger_id=trigger_id,
@@ -61,15 +75,14 @@ def execute_scheduled_trigger(trigger_id: str, recurring: bool = False, interval
             status="active",
             payload=payload
         )
-        print(event)
+        print(f'Adding to event_logs db event: {event}')
 
         db.add(event)
         db.commit()
         op = redis_client.delete("active_logs")
-        print('THIS IS OUTPUT OF REDIS CLI DELETE', op)
         # If the trigger is recurring, schedule it again
         if recurring and interval > 0:
-            # ✅ Store the latest task_id in the database
+            # Store the latest task_id in the database
             trigger = db.query(Trigger).filter(Trigger.id == trigger_id).first()
             if trigger:
                 new_task = execute_scheduled_trigger.apply_async(args=[trigger_id, trigger.recurring, interval], countdown=interval)

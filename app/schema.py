@@ -1,4 +1,4 @@
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel, UUID4,Field
 from typing import Optional, Dict
 from enum import Enum
 from datetime import datetime
@@ -22,6 +22,15 @@ class TriggerResponse(TriggerCreate):
     class Config:
         from_attributes = True  # Ensures SQLAlchemy models map correctly
         orm = True
+
+class TriggerUpdate(BaseModel):
+    name: Optional[str] = Field(None, example="Updated Trigger Name")
+    schedule: Optional[int] = Field(None, example=3600)
+    recurring: Optional[bool] = Field(None, example=True)
+    payload: Optional[Dict] = Field(None, example={"key1": "value1", "key2": "value2"})
+
+    class Config:
+        orm_mode = True
 
 class EventLogResponse(BaseModel):
     id: UUID4

@@ -49,16 +49,5 @@ services:
     env_file:
       - .env
 
-  # ✅ Flower (Celery Monitoring UI)
-  flower:
-    image: mher/flower
-    container_name: flower_monitor
-    command: flower --broker=redis://redis:6379
-    ports:
-      - "5555:5555"
-    depends_on:
-      - redis
-      - celery_worker
-
 volumes:
   postgres_data:
