@@ -30,7 +30,7 @@ class EventLog(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     trigger_id = Column(UUID(as_uuid=True), ForeignKey("triggers.id"), nullable=False)
     executed_at = Column(DateTime, default=datetime.utcnow)
-    payload = Column(JSON, nullable=True)
+    payload = Column(JSON, nullable=True) # Not required, will remove in next iteration
     status = Column(String, default="active")  # active -> archived -> deleted
 
     trigger = relationship("Trigger", backref="event_logs")

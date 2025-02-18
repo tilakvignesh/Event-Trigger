@@ -67,18 +67,21 @@ def get_active_logs(db: Session = Depends(get_db)):
         logs_dict = [
             {
                 "id": str(log.id),
+                "trigger": {
                 "trigger_type": str(log.trigger.type),
                 "trigger_name": str(log.trigger.name),
                 "trigger_recurring": str(log.trigger.recurring),
+                "trigger_schedule": log.trigger.schedule,
+                "payload": log.trigger.payload
+                },
                 "executed_at": str(log.executed_at),
-                "status": log.status,
-                "payload": log.payload
+                "status": log.status           
             }
             for log in logs
         ]
         print(f'fetched active logs from db: {logs_dict}')
         cache_active_logs(logs_dict) # Cache updated event_logs
-        return logs
+        return logs_dict
     except Exception as e:
         print('Exception occurred:', e)
         raise HTTPException(status_code=500, detail='Internal server error')
