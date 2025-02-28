@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  # ✅ FastAPI App
+  # FastAPI App
   web:
     build: .
     container_name: fastapi_app
@@ -16,7 +16,7 @@ services:
     env_file:
       - .env
 
-  # ✅ PostgreSQL Database
+  # PostgreSQL Database
   db:
     image: postgres:15
     container_name: postgres_db
@@ -30,7 +30,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # ✅ Redis (Used for Caching + Celery Broker)
+  # Redis (Used for Caching + Celery Broker)
   redis:
     image: redis:latest
     container_name: redis_cache
@@ -38,7 +38,7 @@ services:
     ports:
       - "6379:6379"
 
-  # ✅ Celery Worker (Executes Background Tasks)
+  # Celery Worker (Executes Background Tasks)
   celery_worker:
     build: .
     container_name: celery_worker
