@@ -1,9 +1,6 @@
 ## Architecture:
 ![Backend Architecture](images/Architecture.png)
 
-## Deployed Solution Link
-[Here](http://13.201.189.39:8000/)
-
 ## Local Setup 
 
 1. git clone https://github.com/tilakvignesh/Event-Trigger.git
